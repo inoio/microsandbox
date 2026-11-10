@@ -758,6 +758,15 @@ char *msb_volume_fs_op(uint64_t cancel_id,
                        uintptr_t buf_len);
 
 /**
+ * Capability marker: this library enforces `hide_path` on bind mounts.
+ *
+ * Older libraries ignore the unknown `hide_path` JSON field and would mount the
+ * paths unhidden, so the Go SDK refuses a hide-path list unless this symbol
+ * resolves. Its presence is the signal; it is never called.
+ */
+bool msb_hide_path_supported(void);
+
+/**
  * Returns the upstream `microsandbox` crate version this FFI was built against.
  * Synchronous; no Rust-side state is touched. The Go SDK exposes this so callers
  * can verify the loaded library matches the expected runtime.

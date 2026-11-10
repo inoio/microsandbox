@@ -6268,6 +6268,16 @@ pub unsafe extern "C" fn msb_volume_fs_op(
     })
 }
 
+/// Capability marker: this library enforces `hide_path` on bind mounts.
+///
+/// Older libraries ignore the unknown `hide_path` JSON field and would mount the
+/// paths unhidden, so the Go SDK refuses a hide-path list unless this symbol
+/// resolves. Its presence is the signal; it is never called.
+#[unsafe(no_mangle)]
+pub extern "C" fn msb_hide_path_supported() -> bool {
+    true
+}
+
 /// Returns the upstream `microsandbox` crate version this FFI was built against.
 /// Synchronous; no Rust-side state is touched. The Go SDK exposes this so callers
 /// can verify the loaded library matches the expected runtime.

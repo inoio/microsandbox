@@ -129,6 +129,7 @@ typedef char *(*msb_sandbox_stop_gracefully_fn)(uint64_t cancel_id, uint64_t han
 typedef char *(*msb_sandbox_request_stop_fn)(uint64_t cancel_id, uint64_t handle, uint8_t *buf, size_t buf_len);
 typedef char *(*msb_sandbox_restore_warnings_fn)(uint64_t cancel_id, uint64_t handle, uint8_t *buf, size_t buf_len);
 typedef char *(*msb_sandbox_pause_fn)(uint64_t cancel_id, uint64_t handle, uint8_t *buf, size_t buf_len);
+typedef bool (*msb_hide_path_supported_fn)(void);
 typedef char *(*msb_sandbox_pause_with_guest_flush_fn)(uint64_t cancel_id, uint64_t handle, const char *source, const char *expected_id, const char *policy, uint8_t *buf, size_t buf_len);
 typedef char *(*msb_sandbox_branch_fn)(uint64_t cancel_id, uint64_t handle, const char *source, const char *child, uint8_t *buf, size_t buf_len);
 typedef char *(*msb_sandbox_branch_with_options_fn)(uint64_t cancel_id, uint64_t handle, const char *source, const char *child, bool record_integrity, uint8_t *buf, size_t buf_len);
@@ -310,6 +311,7 @@ static msb_sandbox_request_stop_fn ptr_msb_sandbox_request_stop = NULL;
 static msb_sandbox_restore_warnings_fn ptr_msb_sandbox_restore_warnings = NULL;
 static msb_sandbox_pause_fn ptr_msb_sandbox_pause = NULL;
 static msb_sandbox_pause_with_guest_flush_fn ptr_msb_sandbox_pause_with_guest_flush = NULL;
+static msb_hide_path_supported_fn ptr_msb_hide_path_supported = NULL;
 static msb_sandbox_branch_fn ptr_msb_sandbox_branch = NULL;
 static msb_sandbox_branch_with_options_fn ptr_msb_sandbox_branch_with_options = NULL;
 static msb_sandbox_branch_with_options_fn ptr_msb_sandbox_branch_many = NULL;
@@ -520,6 +522,7 @@ const char *load_microsandbox(const char *path) {
 	RESOLVE_OPTIONAL(msb_sandbox_restore_warnings);
 	RESOLVE(msb_sandbox_pause);
 	RESOLVE_OPTIONAL(msb_sandbox_pause_with_guest_flush);
+	RESOLVE_OPTIONAL(msb_hide_path_supported);
 	RESOLVE(msb_sandbox_branch);
 	RESOLVE_OPTIONAL(msb_sandbox_branch_with_options);
 	RESOLVE_OPTIONAL(msb_sandbox_branch_many);
@@ -768,6 +771,7 @@ char *call_msb_sandbox_branch(uint64_t cancel_id, uint64_t handle, const char *s
 }
 bool has_branch_integrity(void) { return ptr_msb_sandbox_branch_with_options != NULL; }
 bool has_guest_flush(void) { return ptr_msb_sandbox_pause_with_guest_flush != NULL; }
+bool has_hide_path(void) { return ptr_msb_hide_path_supported != NULL; }
 char *call_msb_sandbox_pause_with_guest_flush(uint64_t cancel_id, uint64_t handle, const char *source, const char *expected_id, const char *policy, uint8_t *buf, size_t buf_len) {
 	return ptr_msb_sandbox_pause_with_guest_flush ? ptr_msb_sandbox_pause_with_guest_flush(cancel_id, handle, source, expected_id, policy, buf, buf_len) : NULL;
 }
@@ -1857,7 +1861,7 @@ type MountSpec struct {
 	Nodev              bool     `json:"nodev,omitempty"`
 	SizeMiB            uint32   `json:"size_mib,omitempty"`
 	QuotaMiB           uint32   `json:"quota_mib,omitempty"`
-	HidePath               []string `json:"hide_path,omitempty"`
+	HidePath           []string `json:"hide_path,omitempty"`
 	StatVirtualization string   `json:"stat_virtualization,omitempty"`
 	HostPermissions    string   `json:"host_permissions,omitempty"`
 	OverrideUid        *uint32  `json:"override_uid,omitempty"`
@@ -2096,6 +2100,9 @@ func createSandbox(ctx context.Context, name string, opts CreateOptions, connect
 	if err := ensureLoaded(); err != nil {
 		return nil, err
 	}
+	if err := checkHidePath(opts.Volumes); err != nil {
+		return nil, err
+	}
 
 	optsJSON, err := json.Marshal(opts)
 	if err != nil {
@@ -2138,6 +2145,9 @@ func RestoreSandbox(ctx context.Context, name string, opts RestoreOptions) (*San
 	}
 	if !bool(C.has_sandbox_restore()) {
 		return nil, &Error{Kind: KindUnsupportedOperation, Message: "native SDK does not support Sandbox restore; update the native SDK"}
+	}
+	if err := checkHidePath(opts.Volumes); err != nil {
+		return nil, err
 	}
 
 	optsJSON, err := json.Marshal(opts)
@@ -2852,6 +2862,9 @@ func BranchManyByName(ctx context.Context, handle uint64, source, identity strin
 	if err := checkGuestFlush(flush, false); err != nil {
 		return nil, err
 	}
+	if err := checkHidePath(volumes); err != nil {
+		return nil, err
+	}
 	if names == nil {
 		names = []string{}
 	}
@@ -2968,6 +2981,24 @@ func validateGuestFlushSupport(policy string, diskOnly, supported bool) error {
 	}
 	if (diskOnly || (policy != "" && policy != "auto")) && !supported {
 		return &Error{Kind: KindUnsupportedOperation, Message: "native SDK does not support guest flush policies; update the native SDK"}
+	}
+	return nil
+}
+
+// checkHidePath prevents older native libraries from silently ignoring hide_path,
+// which would mount the paths the caller asked to hide.
+func checkHidePath(volumes map[string]MountSpec) error {
+	return validateHidePathSupport(volumes, bool(C.has_hide_path()))
+}
+
+func validateHidePathSupport(volumes map[string]MountSpec, supported bool) error {
+	if supported {
+		return nil
+	}
+	for _, spec := range volumes {
+		if len(spec.HidePath) > 0 {
+			return &Error{Kind: KindUnsupportedOperation, Message: "native SDK does not support bind-mount hide_path; update the native SDK"}
+		}
 	}
 	return nil
 }
