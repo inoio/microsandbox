@@ -228,7 +228,7 @@ mounts:
     host_permissions: private
     uid: 1000
     gid: 1000
-    hide_path: [".env", "sub/secret"]
+    hide_path: [".env", "secrets/"]
   - named: cache
     target: "/var/cache/app"
     create: ensure-exists
