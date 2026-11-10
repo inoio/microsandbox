@@ -1176,7 +1176,7 @@ fn steps_to_bind_hide_path_marker() -> usize {
         .iter()
         .position(|migration| {
             migration.name()
-                == microsandbox_migration::schema_metadata::BIND_MOUNT_DENY_CONFIG_MIGRATION_ID
+                == microsandbox_migration::schema_metadata::BIND_MOUNT_HIDE_PATH_CONFIG_MIGRATION_ID
         })
         .expect("bind-hide-path marker migration is listed");
     migrations.len() - index

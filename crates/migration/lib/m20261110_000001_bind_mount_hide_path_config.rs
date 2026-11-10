@@ -25,7 +25,7 @@ pub struct Migration;
 
 impl MigrationName for Migration {
     fn name(&self) -> &str {
-        "m20261012_000001_bind_mount_hide_path_config"
+        "m20261110_000001_bind_mount_hide_path_config"
     }
 }
 

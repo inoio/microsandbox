@@ -77,8 +77,8 @@ pub const VOLUME_CREATION_MIGRATION_ID: &str = "m20261029_000001_volume_creation
 pub const PROTECTED_SANDBOX_STATE_MIGRATION_ID: &str = "m20261030_000001_protected_sandbox_state";
 
 /// Migration that prevents old binaries from discarding persisted bind-mount hide-path lists.
-pub const BIND_MOUNT_DENY_CONFIG_MIGRATION_ID: &str =
-    "m20261012_000001_bind_mount_hide_path_config";
+pub const BIND_MOUNT_HIDE_PATH_CONFIG_MIGRATION_ID: &str =
+    "m20261110_000001_bind_mount_hide_path_config";
 
 /// Frozen migration baseline for the transitional 0.6.0 release.
 ///
@@ -341,7 +341,7 @@ pub const MIGRATION_METADATA: &[MigrationMetadata] = &[
         summary: "refuse downgrade while protected or migrating sandboxes remain",
     },
     MigrationMetadata {
-        id: BIND_MOUNT_DENY_CONFIG_MIGRATION_ID,
+        id: BIND_MOUNT_HIDE_PATH_CONFIG_MIGRATION_ID,
         reversible: true,
         affects_cache: false,
         affects_user_data: false,
@@ -433,7 +433,7 @@ mod tests {
     #[test]
     fn canonical_applied_prefix_uses_metadata_order() {
         let applied = [
-            BIND_MOUNT_DENY_CONFIG_MIGRATION_ID,
+            BIND_MOUNT_HIDE_PATH_CONFIG_MIGRATION_ID,
             PROTECTED_SANDBOX_STATE_MIGRATION_ID,
             VOLUME_CREATION_MIGRATION_ID,
             SANDBOX_CREATION_MIGRATION_ID,
@@ -532,7 +532,7 @@ mod tests {
                 SANDBOX_CREATION_MIGRATION_ID,
                 VOLUME_CREATION_MIGRATION_ID,
                 PROTECTED_SANDBOX_STATE_MIGRATION_ID,
-                BIND_MOUNT_DENY_CONFIG_MIGRATION_ID,
+                BIND_MOUNT_HIDE_PATH_CONFIG_MIGRATION_ID,
             ],
         );
         assert!(canonical_applied_prefix(released).is_some());
