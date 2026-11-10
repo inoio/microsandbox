@@ -1799,7 +1799,7 @@ type MountConfig struct {
 	NamedKind string
 	Owned     string
 	QuotaMiB  uint32
-	HidePath      []string
+	HidePath  []string
 	Tmpfs     bool
 	Disk      string
 	Format    string
@@ -1955,7 +1955,7 @@ func (mountFactory) Bind(hostPath string, opts MountOptions) MountConfig {
 		HostPermissions:    opts.HostPermissions,
 		Owner:              opts.Owner,
 		QuotaMiB:           opts.QuotaMiB,
-		HidePath:               opts.HidePath,
+		HidePath:           opts.HidePath,
 	}
 }
 
@@ -1970,7 +1970,7 @@ func (mountFactory) Named(name string, opts MountOptions) MountConfig {
 		Nodev:              opts.Nodev,
 		StatVirtualization: opts.StatVirtualization,
 		HostPermissions:    opts.HostPermissions,
-		HidePath:               opts.HidePath,
+		HidePath:           opts.HidePath,
 		Owner:              opts.Owner,
 	}
 }
@@ -1991,7 +1991,7 @@ func (mountFactory) NamedWith(name string, opts MountOptions, namedOpts NamedVol
 		Nodev:              opts.Nodev,
 		StatVirtualization: opts.StatVirtualization,
 		HostPermissions:    opts.HostPermissions,
-		HidePath:               opts.HidePath,
+		HidePath:           opts.HidePath,
 		Owner:              opts.Owner,
 	}
 }

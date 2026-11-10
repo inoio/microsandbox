@@ -921,7 +921,7 @@ def _validate_hide_path_pattern(pattern: str) -> None:
 
     if pattern in (".", ".."):
         raise ValueError(
-            "hide-path pattern must not be '.' or '..'; hide-path a named entry instead "
+            "hide-path pattern must not be '.' or '..'; hide a named entry instead "
             f"(e.g. 'secret' or 'secret/'): {pattern!r}"
         )
 

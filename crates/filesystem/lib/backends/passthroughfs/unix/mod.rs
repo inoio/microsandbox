@@ -157,7 +157,7 @@ pub struct PassthroughConfig {
     ///
     /// This is host-side defense in depth for read-only virtiofs volume mounts.
     /// The guest mount also uses `MS_RDONLY`, but a privileged guest process can
-    /// attempt to remount; the backend must still hide_path writes.
+    /// attempt to remount; the backend must still deny writes.
     pub readonly: bool,
 
     /// FUSE entry cache timeout.

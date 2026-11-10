@@ -910,7 +910,7 @@ fn test_hide_path_path_pattern_fails_closed_on_unresolvable_parent() {
     });
 
     // A bogus parent inode is absent from the inode table, so its path cannot
-    // be reconstructed. With active path patterns this must hide_path, never allow.
+    // be reconstructed. With active path patterns this must hide, never allow.
     assert!(
         sb.fs.hide_path_matches_name(1_000_000, b"secret", false),
         "unresolvable parent under path patterns must fail closed"
@@ -1107,7 +1107,7 @@ fn do_link_denies_dir_only_rule_using_source_type() {
 ///
 /// The link entry itself is served (hide_path matches the entry name, and `link` is
 /// allowed), but following the link resolves the target name, which is a fresh
-/// lookup that hide_path rejects with `ENOENT`. The target's contents stay
+/// lookup that the hide-path list rejects with `ENOENT`. The target's contents stay
 /// unreachable; only the link entry's existence is observable, which is the
 /// same name-based limitation as any allowed name.
 #[test]

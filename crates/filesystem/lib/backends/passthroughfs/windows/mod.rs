@@ -286,7 +286,7 @@ impl PassthroughFs {
         }
         let Ok(parent_data) = self.inode(parent) else {
             // Fail closed: an unresolvable parent under active path patterns
-            // must hide_path, never allow.
+            // must hide, never allow.
             return true;
         };
 
