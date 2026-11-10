@@ -2624,6 +2624,29 @@ fn windows_restore_refuses_path_hidden_by_destination_hide_path() {
     );
 }
 
+/// A stored entry below a directory the destination hide-path list hides must not be
+/// re-interned, even when the directory's own inode was forgotten before capture.
+#[test]
+fn windows_restore_refuses_path_below_hidden_directory() {
+    let temp = TempDir::new();
+    std::fs::create_dir(temp.path.join("secret")).unwrap();
+    std::fs::write(temp.path.join("secret").join("data"), b"secret").unwrap();
+    let source = fs_for(&temp.path);
+    let secret = source
+        .lookup(context(), ROOT_INODE, c"secret")
+        .unwrap()
+        .inode;
+    source.lookup(context(), secret, c"data").unwrap();
+    source.forget(context(), secret, 1);
+    let bytes = source.capture_state().unwrap();
+
+    let destination = fs_for_hide_path(&temp.path, vec!["secret/".to_string()]);
+    assert!(
+        destination.restore_state(&bytes).is_err(),
+        "restore must refuse an entry below a directory the destination hide-path list hides"
+    );
+}
+
 /// A saved hardlink alias whose name the destination hide-path list now hides must
 /// not be re-interned either.
 #[test]

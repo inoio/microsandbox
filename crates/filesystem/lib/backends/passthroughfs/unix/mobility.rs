@@ -1290,6 +1290,38 @@ mod tests {
     }
 
     #[test]
+    fn restore_refuses_a_path_below_a_directory_the_destination_hides() {
+        let root = tempfile::tempdir().unwrap();
+        std::fs::create_dir(root.path().join("secret")).unwrap();
+        std::fs::write(root.path().join("secret/data"), b"x").unwrap();
+        let source = backend(root.path());
+        source.init(FsOptions::empty()).unwrap();
+        let secret = source.lookup(context(), 1, c"secret").unwrap().inode;
+        source.lookup(context(), secret, c"data").unwrap();
+        // Drop the directory's own entry so only `secret/data` is stored.
+        source.forget(context(), secret, 1);
+        let encoded = capture(&source).unwrap();
+
+        let destination = PassthroughFs::new(super::super::PassthroughConfig {
+            root_dir: root.path().to_path_buf(),
+            inject_init: false,
+            stat_virtualization: StatVirtualization::Off,
+            hide_path: vec!["secret/".to_string()],
+            ..Default::default()
+        })
+        .unwrap();
+        destination.init(FsOptions::empty()).unwrap();
+
+        let error = restore(&destination, &encoded).unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("hidden by the mount hide-path list"),
+            "{error}"
+        );
+    }
+
+    #[test]
     #[cfg(target_os = "linux")]
     fn restore_does_not_abort_when_the_containing_directory_is_unreadable() {
         // A searchable-but-unreadable parent (mode `0111`) rejects `O_RDONLY`, but
